@@ -1,0 +1,163 @@
+---
+title: "Machine Learning With Caret"
+author: "Lareina La Flair"
+date: "3/11/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Package names
+packages <- c("dplyr", "neuralnet", "tidytext", "wesanderson", "stringr", "caret", "keras")
+
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+```
+
+## Deep Learning Versus Machine Learning
+
+Deep Learning (basic definition): 
+	- Form of machine learning that structures algorithms in layers to create an “artificial neural network” that can learn and make intelligent decisions on its own.
+	- First give the algorithm examples -- sample inputs, sample outputs (target variable, something you want to predict)
+	- Yielding a bunch of estimates, weighted nodes to approximate the output
+	- Iterative process
+	- Inspired by Dense neural networks in the human brain (what powers the most human-like AI)
+[Source](https://www.zendesk.com/blog/machine-learning-and-deep-learning/)
+
+**A note on sampling:**
+
+In Sample versus Out of Sample Error:
+
+Train/test split: error metrics should be performed on new data; predicting on your training data guarantees overfitting; pick models that perform well on new data
+	**How much to split?** 80/20 training/test
+	RMSE = `sqrt(mean(predicted - actual) ^2))`
+	squaring it, taking the mean, then taking the square root:
+  `sqrt(mean(error^2))`
+  
+**Replace with "real data" from kaggle native dataset.**
+
+```{r step0, eval=FALSE}
+
+```
+
+## Step 1 Randomly order the dataset
+
+
+```{r step1, eval=FALSE}
+#Set seed
+set.seed(42)
+
+#Shuffle row indices
+
+rows<-sample(nrow(diamonds))
+#Randomly order data
+
+shuffled_diamonds <-diamonds[rows,]
+```
+
+## 80/20 split (train/test)
+
+```{r step2, eval=FALSE}
+# Determine row to split on: split
+split <-round(nrow(diamonds)*0.80)
+
+# Create training dataset train
+train <- diamonds[1:split, ]
+
+# Create test
+test <- diamonds[(split+1):nrow(diamonds), ]
+
+```
+
+## Predict on test set
+
+```{r step3, eval=FALSE}
+#Fit lm model on train: model
+
+model <-lm(price~.,train)
+
+#Predict on test: p
+p <- predict(model, test)
+```
+
+## Calculate test set RMSE by hand
+
+ Predicted values = p
+
+```{r step4, eval=FALSE}
+# Compute errors: error
+error <- p- test[["price"]]
+
+# Calculate RMSE
+sqrt(mean(error^2))
+```
+
+## 	Cross validation
+
+10-fold cross validation: instead of splitting data into train/test, do multiple test sets (by random sample) and average the out-of-sample error. Then refit model on full training dataset! (Costly, 10 test models plus return to full training set for refit.)
+
+Here, ten-fold cross-validation.
+
+```{r step5, eval=FALSE}
+#Fit lm model using 10-fold CV: model
+
+model <-train(
+price~.,
+diamonds,
+method="lm",
+trControl=trainControl(
+method="cv",
+number=10,
+verboseIter=TRUE
+)
+)
+#Print model to console
+model
+
+#Fit lm model using 5-fold CV: model
+model <-train(
+medv~.,
+Boston,
+method="lm",
+trControl=trainControl(
+method="cv",
+number=5,
+verboseIter=TRUE
+)
+
+#Fit lm model using 5 x 5-fold CV: model
+model<-train(
+medv~.,
+Boston,
+method="lm",
+trControl=trainControl(
+method="repeatedcv",
+number=5,
+repeats=5,
+verboseIter=TRUE
+)
+)
+```
+
+## 	Making predictions on new data
+
+After fitting a model with `train()`, you can simply call `predict()` with new data, e.g:
+`predict(my_model, new_data)`
+
+```{r step7, eval=FALSE}
+
+#Predict on full Boston dataset
+predict(model,Boston)
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
